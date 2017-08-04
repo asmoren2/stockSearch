@@ -6,7 +6,7 @@ This stock application allows the user to search for a stock symbol and retrieve
 Information is retrieved from Yahoo's Finance API which nol loger supports Historical data.
 Note: while working on this project EmberJS' model wasn't cooperating and thus had to create some dummy data that is computed for each specific stock.
 
-1.To run you need to install mongo database.
+1. To run you need to install mongo database.
 
 2. Once you have mongo running you can download and click on the dbSetup executable file which will load all of the dataset into the database. After that run the database by using the "mongod" command.
 
