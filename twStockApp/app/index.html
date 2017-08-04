@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <!-- Latest compiled and minified CSS -->
+  <!--  Load Bootstrap-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+  <!--  Loaded scripts-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>stockSearch</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> {{content-for "head"}}
+
+  <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
+  <link rel="stylesheet" href="{{rootURL}}assets/tw-stock-app.css"> {{content-for "head-footer"}}
+</head>
+
+<body>
+  {{content-for "body"}}
+
+  <script src="{{rootURL}}assets/vendor.js"></script>
+  <script src="{{rootURL}}assets/tw-stock-app.js"></script>
+
+  <!-- Load bootrap to here to create a mobile friendly nav bar -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js">
+  </script>
+
+  <script>
+    // Grab the stock from yahoo finance api.
+    //Yahoo lost support for historical data. API from FinCluster
+    (function($) {
+      function getStock(opts, type, complete) {
+        var defs = {
+          desc: false,
+          baseURL: 'http://query.yahooapis.com/v1/public/yql?q=',
+          query: {
+            quotes: 'select * from yahoo.finance.quotes where symbol = "{stock}" | sort(field="{sortBy}", descending="{desc}")',
+            historicaldata: 'select * from yahoo.finance.historicaldata where symbol = "{stock}" and startDate = "{startDate}" and endDate = "{endDate}"'
+          },
+          suffixURL: {
+            quotes: '&env=store://datatables.org/alltableswithkeys&format=json&callback=?',
+            historicaldata: '&env=store://datatables.org/alltableswithkeys&format=json&callback=?'
+          }
+        };
+
+        opts = opts || {};
+
+        if (!opts.stock) {
+          complete('No stock defined');
+          return;
+        }
+
+        var query = defs.query[type]
+          .replace('{stock}', opts.stock)
+          .replace('{sortBy}', defs.sortBy)
+          .replace('{desc}', defs.desc)
+          .replace('{startDate}', opts.startDate)
+          .replace('{endDate}', opts.endDate)
+
+        var url = defs.baseURL + query + (defs.suffixURL[type] || '');
+        $.getJSON(url, function(data) {
+          var err = null;
+          if (!data || !data.query) {
+            err = true;
+          }
+          complete(err, !err && data.query.results);
+        });
+      }
+      window.getStock = getStock;
+    })(jQuery);
+    // End Fincluster api script
+  </script>
+
+  <script>
+    // EmberJS would not retrieve my models so I made this hack
+    // Takes current URL Parameters
+    var currentURL = (window.location.href); // current url
+    var part = currentURL.split("/")[3]; // parse url for Parameters
+
+    // Since Yahoo discontinued their historical data I randomize numbers between
+    // two bounds to show how the graph would work.
+    // Check to see if Parameters are empty if not get the stock data and display.
+    if (part != "") {
+      getStock({
+        stock: part
+      }, 'quotes', function(err, data) {
+        // If the stock does not exist in the db then alert the user and prompt them to
+        // input another valid stock.
+        if (data.quote.Name === null) {
+          alert("No such symbol exists please try another");
+          window.location.replace("/"); // Take the user to the home page again
+        } else {
+          //console.log(data);
+          var myDiv = document.getElementById("container"); // Get Div where we will display info
+          var myDiv2 = document.getElementById("container2"); // Get Div where we will display info
+
+          // Take the year high and set as upper bound
+          var upperBound = parseFloat(data.quote.YearHigh);
+          // Take the year low and set as lower bound
+          var lowerBound = parseFloat(data.quote.YearLow);
+          // To make the data more realistic randomly select a new low boundary from bounds
+          var newLower = Math.floor(Math.random() * (upperBound - lowerBound + 1) + lowerBound);
+          var avgList = []; // holds 31 randomized prices (will eventually replace) with real data
+
+          // Populate our list with 30 numbers between newLower and upperBound boundaries
+          for (i = 0; i < 30; i++) {
+            var g = Math.floor(Math.random() * (upperBound - newLower + 1) + newLower);
+            avgList.push(g);
+            //console.log(g);
+          }
+          // Add todays bid
+          avgList.push(data.quote.Bid);
+
+          // Populat our div with new info.
+          if (myDiv != null && myDiv2 != null) {
+            myDiv.innerHTML += '<h3>' + data.quote.Name + '</h3>'
+            myDiv.innerHTML += '<h4>Symbol: ' + data.quote.Symbol + '</h4>'
+            myDiv.innerHTML += '<h4>Market Cap: ' + data.quote.MarketCapitalization + '</h4>'
+            myDiv.innerHTML += '<h4>Volume: ' + data.quote.Volume + '</h4>'
+            myDiv2.innerHTML += '<h4>Current Bid: ' + data.quote.Bid + '</h4>'
+            myDiv2.innerHTML += '<h4> Day High: ' + data.quote.DaysHigh + '</h4>'
+            myDiv2.innerHTML += '<h4>Day Low: ' + data.quote.DaysLow + '</h4>'
+          }
+          // Call our chart API function provided by Chart.js
+          createChart(avgList);
+        }
+      });
+    }
+
+    // Function that creates chart
+    function createChart(myList) {
+      // Select Div where chart will go.
+      var ctx = document.getElementById("myChart").getContext('2d');
+      // hold the days of the month
+      var dayOfMonth = [];
+      // Populate days of the month
+      for (i = 1; i < 32; i++) {
+        dayOfMonth.push(i);
+      }
+      // Actual creation of chart by Chart.js
+      var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dayOfMonth,
+          datasets: [{
+            label: '#Average Stock Price For The Last Month',
+            data: myList,
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+              'rgba(255, 206, 86, 0.2)',
+              'rgba(75, 192, 192, 0.2)',
+              'rgba(153, 102, 255, 0.2)',
+              'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+              'rgba(255,99,132,1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(75, 192, 192, 1)',
+              'rgba(153, 102, 255, 1)',
+              'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+      });
+    }
+  </script>
+
+  {{content-for "body-footer"}}
+
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+<style>
+  @import url('http://getbootstrap.com/dist/css/bootstrap.css');
+  html,
+  body,
+  .container-table {
+    height: 100%;
+  }
+
+  .container-table {
+    display: table;
+  }
+
+  .vertical-center-row {
+    display: table-cell;
+    vertical-align: middle;
+  }
+</style>
+<!-- Display search bar and logo -->
+<div class="container container-table">
+  <div class="row vertical-center-row">
+    <div>
+      <center>
+        <img src="http://adolfomoreno.me/images/stockSearchLogo.png" alt="stockSearch" style="width:440px;height:70px;">
+        <form class="form-horizontal" {{action 'search' this on="submit"}}>
+          <div class="control-group">
+            <label>Search for a stock using its' symbol (i.e 'AAPL')</label>
+            <br>
+            <br> {{input value=symbol size="50"  action="search"}}
+            <br>
+          </div>
+          <br>
+          <button type="submit" class="btn">Search</button>
+        </form>
+      </center>
+
+
+    </div>
+
+  </div>
+</div>

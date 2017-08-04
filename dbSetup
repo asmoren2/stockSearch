@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mongoimport -d mystock -c stocks --type csv --file companylist.csv --headerline
+mongoimport -d mystock -c stocks --type csv --file companylist-2.csv --headerline
+mongoimport -d mystock -c stocks --type csv --file companylist-3.csv --headerline

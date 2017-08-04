@@ -1,0 +1,21 @@
+<!-- Display single stock information -->
+
+<!-- Allow user to search for a different stock -->
+<form class="form-horizontal" {{action "search" on="submit"}}>
+  <div class="control-group">
+    <label>Search a different stock symbol</label>
+
+    <div class="controls">
+      {{input value=symbol type="text"}}
+      <button type="submit" class="btn">Search</button>
+    </div>
+  </div>
+</form>
+
+<!--  Stock info will go in here-->
+<div class="row">
+  <div class="col-md-8" id="container"></div>
+  <div class="col-md-4" id="container2"><br><br></div>
+</div>
+<!--  Chart will go in here-->
+<canvas id="myChart" width="200" height="100"></canvas>
