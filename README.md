@@ -14,4 +14,4 @@ Note: while working on this project EmberJS' model wasn't cooperating and thus h
 
 4. Finally, you need to maneuver into the twStockApp folder which is where our ember files are and within your terminal run the command "ember serve" to start the ember application.
 
-6. **Please run in Google Chrome as there is a bug I am trying to fix in both Safari and Firefox.
+6. **Please run in Google Chrome as there is a bug I am trying to fix in both Safari and Firefox.**
